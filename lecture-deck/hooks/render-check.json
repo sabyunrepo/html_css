@@ -1,0 +1,7 @@
+{
+  "name": "render-check",
+  "description": "Verify browser-rendered deck behavior, overflow, note exposure, presenter scripts, and motion runtime.",
+  "events": ["render-check", "pre-handoff"],
+  "command": "node scripts/verify-deck.js --mode=render",
+  "passRule": "The command exits with code 0 and reports zero desktop/mobile overflow issues, zero deck note exposure, visible presenter scripts, declared motion animations, and static reduced-motion behavior."
+}

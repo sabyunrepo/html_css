@@ -1,0 +1,7 @@
+{
+  "name": "harness-check",
+  "description": "Verify deck source/spec/design/skill files and animation safety without browser rendering.",
+  "events": ["harness-check", "pre-handoff"],
+  "command": "node scripts/verify-deck.js --mode=harness",
+  "passRule": "The command exits with code 0 and reports zero missing files, broken links, valid slide spec shape, safe keyframes, reduced-motion fallback, finite animation policy, and valid motion spec shape."
+}

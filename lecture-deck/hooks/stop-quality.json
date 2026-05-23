@@ -1,0 +1,7 @@
+{
+  "name": "stop-quality",
+  "description": "Capture rendered deck screenshots and fail when visual quality is below the presentation-ready bar.",
+  "events": ["stop-quality"],
+  "command": "node scripts/visual-quality-gate.js",
+  "passRule": "The command exits with code 0, writes .deck-quality screenshots and report, and reports no visual quality failures."
+}

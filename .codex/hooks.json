@@ -1,0 +1,21 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node lecture-deck/scripts/run-hook.js pre-handoff",
+            "timeout": 90
+          },
+          {
+            "type": "command",
+            "command": "node lecture-deck/scripts/run-hook.js stop-quality",
+            "timeout": 120
+          }
+        ]
+      }
+    ]
+  }
+}

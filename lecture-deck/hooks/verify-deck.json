@@ -1,0 +1,7 @@
+{
+  "name": "verify-deck",
+  "description": "Run the full HTML/CSS deck verification suite manually.",
+  "events": ["manual"],
+  "command": "node scripts/verify-deck.js --mode=all",
+  "passRule": "The command exits with code 0 and reports zero missing files, broken links, note exposure, missing presenter scripts, overflow issues, unsafe keyframe properties, missing reduced-motion fallback, and motion-runtime violations."
+}

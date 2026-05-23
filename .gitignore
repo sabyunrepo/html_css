@@ -1,0 +1,8 @@
+node_modules/
+.DS_Store
+lecture-deck/.deck-quality/
+lecture-deck/source.md
+lecture-deck/slide-spec.json
+lecture-deck/HANDOFF.md
+lecture-deck/slides/*.html
+!lecture-deck/slides/.gitkeep
