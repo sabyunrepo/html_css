@@ -1,0 +1,4 @@
+interface:
+  display_name: "Deck Output Reset"
+  short_description: "Clear generated deck outputs while preserving the harness."
+  default_prompt: "Use $deck-output-reset to dry-run and apply a generated-output reset before creating a new deck topic."

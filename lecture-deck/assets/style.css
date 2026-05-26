@@ -1,16 +1,30 @@
 @import "./visuals.css";
 
 :root {
-  --bg: #f5f5f7;
-  --surface: #ffffff;
-  --ink: #1d1d1f;
-  --muted: #6e6e73;
-  --hairline: #d2d2d7;
-  --accent: #0066cc;
-  --accent-soft: #edf5ff;
-  --soft: #f5f5f7;
-  --warm: #f7f2ea;
-  --radius: 8px;
+  --paper: #e3d9cf;
+  --paper-soft: #eae0d6;
+  --card: #f3ebe2;
+  --card-strong: #fffaf3;
+  --ink: #211d19;
+  --muted-ink: #57524d;
+  --divider: #c9beb2;
+  --line: #211d19;
+  --canvas: #f3ebe2;
+  --inverse-ink: #fffaf3;
+  --radius-md: 14px;
+  --radius-lg: 26px;
+  --radius-pill: 999px;
+  --font-sans: Pretendard, Inter, Geist, "Yoon Gothic", "Apple SD Gothic Neo", system-ui, Helvetica, Arial, sans-serif;
+  --font-display: "Jeju Hallasan", "210 Naui Dongmu", "Nanum Pen Script", Pretendard, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Geist Mono", "SF Mono", Menlo, Consolas, monospace;
+  --motion-fast: 520ms;
+  --motion-medium: 780ms;
+  --motion-slow: 980ms;
+  --motion-rise: 16px;
+  --motion-scale-start: 0.24;
+  --delay-step: 140ms;
+  --delay-nudge: 40ms;
+  --ease-calm: cubic-bezier(0.2, 0, 0, 1);
   color-scheme: light;
 }
 
@@ -26,30 +40,33 @@ body {
 body {
   margin: 0;
   color: var(--ink);
-  background: var(--bg);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  line-height: 1.35;
+  background: var(--paper-soft);
+  font-family: var(--font-sans);
+  line-height: 1.38;
 }
 
 a {
-  color: var(--accent);
+  color: inherit;
 }
 
 .deck-shell {
   min-height: 100vh;
   display: grid;
-  grid-template-rows: 64px 1fr;
+  grid-template-rows: 70px 1fr;
+  background:
+    radial-gradient(circle at 15% 18%, rgba(255, 250, 243, 0.34), transparent 30%),
+    linear-gradient(180deg, var(--paper-soft), var(--paper));
 }
 
 .deck-topbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 20px;
-  padding: 12px 24px;
-  border-bottom: 1px solid rgba(210, 210, 215, 0.82);
-  background: rgba(245, 245, 247, 0.92);
-  backdrop-filter: saturate(180%) blur(18px);
+  gap: 24px;
+  padding: 12px 28px;
+  border-bottom: 1px solid rgba(7, 6, 6, 0.16);
+  background: rgba(243, 235, 226, 0.9);
+  backdrop-filter: blur(8px);
 }
 
 .deck-topbar strong,
@@ -59,35 +76,45 @@ a {
 }
 
 .deck-topbar strong {
-  font-size: 0.92rem;
-  font-weight: 700;
+  font-size: 1rem;
+  font-weight: 800;
 }
 
 .deck-status {
   margin-top: 2px;
-  color: var(--muted);
+  color: var(--muted-ink);
   font-size: 0.82rem;
+  font-weight: 500;
 }
 
 .deck-actions {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   flex: 0 0 auto;
 }
 
 .deck-actions a,
-.deck-actions button {
-  min-height: 36px;
-  padding: 7px 12px;
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.78);
+.deck-actions button,
+.review-page a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 22px;
+  border: 1px solid var(--ink);
+  border-radius: var(--radius-pill);
+  background: var(--card-strong);
   color: var(--ink);
   font: inherit;
-  font-size: 0.86rem;
-  font-weight: 700;
+  font-size: 0.96rem;
+  font-weight: 800;
   text-decoration: none;
   cursor: pointer;
+}
+
+.deck-actions button {
+  background: var(--ink);
+  color: var(--inverse-ink);
 }
 
 .deck-stage {
@@ -95,7 +122,7 @@ a {
   position: relative;
   display: grid;
   place-items: center;
-  padding: 30px 76px;
+  padding: 30px 84px;
 }
 
 .deck-strip {
@@ -111,32 +138,32 @@ a {
   z-index: 5;
   width: 46px;
   height: 46px;
-  border: 1px solid rgba(210, 210, 215, 0.86);
+  border: 2px solid var(--ink);
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.78);
+  background: var(--card-strong);
   color: var(--ink);
   font: inherit;
-  font-size: 2rem;
+  font-size: 1.8rem;
+  font-weight: 800;
   line-height: 1;
   cursor: pointer;
-  backdrop-filter: saturate(180%) blur(18px);
 }
 
 #previousSlide {
-  left: 18px;
+  left: 22px;
 }
 
 #nextSlide {
-  right: 18px;
+  right: 22px;
 }
 
 .deck-nav:disabled {
-  opacity: 0.32;
+  opacity: 0.24;
   cursor: not-allowed;
 }
 
 .deck-frame {
-  width: min(calc(100vw - 176px), 1180px);
+  width: min(calc(100vw - 192px), 1280px);
   aspect-ratio: 16 / 9;
   display: none;
 }
@@ -146,21 +173,37 @@ a {
 }
 
 .slide {
+  position: relative;
   width: 100%;
   height: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-  gap: 56px;
-  padding: 76px;
-  border: 1px solid rgba(210, 210, 215, 0.72);
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.08);
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  gap: 46px;
+  padding: 66px 72px;
+  border: 1px solid rgba(7, 6, 6, 0.12);
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(rgba(255, 250, 243, 0.14) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 250, 243, 0.12) 1px, transparent 1px),
+    var(--paper);
+  background-size: 52px 52px;
+  color: var(--ink);
   overflow: hidden;
+}
+
+.slide::after {
+  content: "";
+  position: absolute;
+  inset: 18px;
+  pointer-events: none;
+  border: 1px solid rgba(7, 6, 6, 0.1);
+  border-radius: 20px;
 }
 
 .copy,
 .visual {
+  position: relative;
+  z-index: 1;
   min-width: 0;
   display: grid;
   align-content: center;
@@ -171,40 +214,85 @@ a {
 }
 
 .eyebrow {
-  color: var(--accent);
+  justify-self: start;
+  margin: 0;
+  padding: 8px 18px;
+  border-radius: var(--radius-pill);
+  background: var(--ink);
+  color: var(--inverse-ink);
   font-size: 0.9rem;
   font-weight: 800;
+  line-height: 1.1;
 }
 
 h1,
 h2 {
-  margin: 14px 0 18px;
-  max-width: 12ch;
-  color: var(--ink);
-  font-size: 4.4rem;
-  line-height: 1.12;
+  max-width: 13ch;
+  margin: 18px 0 20px;
+  color: inherit;
+  font-size: clamp(2.75rem, 4.4vw, 4rem);
+  font-weight: 850;
   letter-spacing: 0;
-  padding-bottom: 0.04em;
+  line-height: 1.12;
+  padding-bottom: 0.08em;
+}
+
+.layout-cover h1 {
+  font-family: var(--font-display);
+  font-size: clamp(4.1rem, 7.2vw, 6.3rem);
+  font-weight: 800;
+  line-height: 1.02;
 }
 
 .subtitle {
-  max-width: 29em;
+  max-width: 30em;
   margin: 0;
-  color: var(--muted);
-  font-size: 1.34rem;
-  line-height: 1.55;
+  color: var(--ink);
+  font-size: 1.22rem;
+  font-weight: 520;
+  line-height: 1.45;
 }
 
 .note {
-  margin-top: 24px;
-  padding: 14px 16px;
-  border-left: 4px solid var(--accent);
-  border-radius: var(--radius);
-  background: var(--accent-soft);
+  display: none;
 }
 
-.layout-title {
-  grid-template-columns: minmax(0, 1.06fr) minmax(0, 0.94fr);
+code {
+  padding: 0.08em 0.18em;
+  border-radius: 6px;
+  background: rgba(255, 250, 243, 0.58);
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+.layout-cover {
+  grid-template-columns: 1fr;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 6px;
+  padding-block: 48px 34px;
+  text-align: center;
+}
+
+.layout-cover .copy {
+  align-content: center;
+  justify-items: center;
+}
+
+.layout-cover .subtitle {
+  max-width: 34em;
+}
+
+.layout-cover .visual {
+  align-content: end;
+}
+
+.layout-toc,
+.layout-cols-2 {
+  grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
+}
+
+.layout-wide-visual {
+  grid-template-columns: minmax(0, 0.76fr) minmax(0, 1.24fr);
 }
 
 .layout-center {
@@ -231,7 +319,7 @@ h2 {
 .review-page {
   width: min(1120px, calc(100% - 40px));
   margin: 0 auto;
-  padding: 44px 0 80px;
+  padding: 56px 0 88px;
 }
 
 .review-page header {
@@ -241,6 +329,7 @@ h2 {
 .review-page h1 {
   max-width: none;
   font-size: 3.8rem;
+  font-weight: 850;
 }
 
 .review-list {
@@ -249,22 +338,23 @@ h2 {
 }
 
 .review-card {
-  padding: 24px;
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius);
-  background: var(--surface);
+  padding: 28px;
+  border: 1px solid var(--divider);
+  border-radius: var(--radius-lg);
+  background: var(--card-strong);
 }
 
 .review-card h2 {
   max-width: none;
   font-size: 2rem;
+  font-weight: 850;
 }
 
 .presenter-script {
-  padding: 16px 18px;
-  border-left: 4px solid var(--accent);
-  border-radius: var(--radius);
-  background: var(--accent-soft);
+  padding: 18px 20px;
+  border-radius: var(--radius-md);
+  background: var(--paper);
+  font-weight: 500;
 }
 
 .evidence-list {
@@ -277,12 +367,12 @@ h2 {
 
 .evidence-list li {
   max-width: 100%;
-  padding: 6px 10px;
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius);
+  padding: 7px 12px;
+  border: 1px solid var(--divider);
+  border-radius: var(--radius-pill);
   overflow-wrap: anywhere;
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
 }
 
 @media (max-width: 820px) {
@@ -293,11 +383,21 @@ h2 {
   .deck-topbar {
     align-items: flex-start;
     flex-direction: column;
-    padding: 12px 16px;
+    padding: 14px 16px;
   }
 
   .deck-stage {
+    align-content: start;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
     padding: 16px;
+  }
+
+  .deck-strip {
+    flex: 0 0 100%;
+    order: 1;
   }
 
   .deck-frame {
@@ -305,46 +405,53 @@ h2 {
     aspect-ratio: auto;
   }
 
-  .slide {
+  .slide,
+  .layout-toc,
+  .layout-cols-2,
+  .layout-wide-visual {
+    height: auto;
     min-height: 720px;
     grid-template-columns: 1fr;
-    gap: 28px;
-    padding: 34px;
+    gap: 26px;
+    padding: 32px;
+    border-radius: var(--radius-lg);
+  }
+
+  .copy,
+  .visual {
+    align-self: start;
+    align-content: start;
   }
 
   .deck-nav {
-    top: auto;
-    bottom: 14px;
+    order: 2;
+    position: static;
+    transform: none;
   }
 
-  #previousSlide {
-    left: 16px;
-  }
-
+  #previousSlide,
   #nextSlide {
-    right: 16px;
+    left: auto;
+    right: auto;
   }
 
   h1,
   h2 {
-    font-size: 2.72rem;
+    font-size: 3rem;
+  }
+
+  .layout-cover h1 {
+    font-size: 4rem;
   }
 
   .subtitle {
     font-size: 1.12rem;
   }
-
-  .layout-center h1,
-  .layout-center h2,
-  .layout-center .subtitle {
-    max-width: 100%;
-  }
-
 }
 
 @media print {
   body {
-    background: #ffffff;
+    background: var(--canvas);
   }
 
   .deck-topbar,

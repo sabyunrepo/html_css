@@ -1,0 +1,7 @@
+{
+  "name": "regression-gate",
+  "description": "Run the long harness regression suite: controlled quality loops, full motion mutation score, and orchestration replay validation.",
+  "events": ["regression-gate"],
+  "command": "node scripts/regression-gate.js",
+  "passRule": "The command exits with code 0, writes .deck-quality/regression-gate-report.json, kills all configured motion mutants, passes controlled improvement-loop gate health, and validates the orchestration runner."
+}

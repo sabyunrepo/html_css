@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local/lecture-deck/agent-handoff.schema.json",
+  "title": "Lecture Deck Agent Handoff",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "runId",
+    "phase",
+    "agent",
+    "role",
+    "delegatedBy",
+    "handoffType",
+    "task",
+    "findings",
+    "actions",
+    "judgement",
+    "openIssues",
+    "evidence",
+    "validationEvidence",
+    "commandsRun",
+    "filesTouched",
+    "routingDecision",
+    "nextGate"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "runId": { "type": "string", "minLength": 1 },
+    "phase": { "type": "string", "minLength": 1 },
+    "agent": { "type": "string", "minLength": 1 },
+    "role": { "type": "string", "minLength": 1 },
+    "delegatedBy": { "type": "string", "minLength": 1 },
+    "handoffType": {
+      "type": "string",
+      "enum": ["agent-result", "agent-review", "agent-validation", "agent-fallback"]
+    },
+    "task": { "type": "string", "minLength": 1 },
+    "findings": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "actions": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "judgement": {
+      "type": "string",
+      "enum": ["pass", "fail", "blocked", "needs-orchestrator-decision"]
+    },
+    "openIssues": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["kind", "pathOrUrl", "note"],
+        "properties": {
+          "kind": { "type": "string", "minLength": 1 },
+          "pathOrUrl": { "type": "string", "minLength": 1 },
+          "note": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "validationEvidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["commandOrGate", "status", "note"],
+        "properties": {
+          "commandOrGate": { "type": "string", "minLength": 1 },
+          "status": { "type": "string", "enum": ["pass", "fail", "skipped", "not-run"] },
+          "note": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "commandsRun": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["command", "status", "note"],
+        "properties": {
+          "command": { "type": "string", "minLength": 1 },
+          "status": { "type": "string", "enum": ["pass", "fail", "skipped", "not-run"] },
+          "note": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "filesTouched": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "routingDecision": {
+      "type": "string",
+      "enum": [
+        "no-routing-needed",
+        "route-to-research",
+        "route-to-asset-research",
+        "route-to-content",
+        "route-to-visual-review",
+        "route-to-screenshot-review",
+        "route-to-validation",
+        "route-to-output-regeneration",
+        "route-to-workflow-improvement",
+        "fallback-to-main-session"
+      ]
+    },
+    "nextGate": { "type": "string", "minLength": 1 }
+  },
+  "additionalProperties": false
+}

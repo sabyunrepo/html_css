@@ -1,0 +1,7 @@
+{
+  "name": "agent-contract-check",
+  "description": "Verify run contract, tool policy, agent handoff schema, stale agent flow strings, screenshot review artifact, and workflow trace.",
+  "events": ["agent-contract-check", "harness-check", "pre-handoff"],
+  "command": "node scripts/verify-agent-contracts.js",
+  "passRule": "The command exits with code 0 and reports valid current-run, tool-policy, handoff schema, agent flow alignment, screenshot review artifact when screenshots exist, and workflow trace."
+}

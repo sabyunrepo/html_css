@@ -1,0 +1,4 @@
+interface:
+  display_name: "Deck Spec Review"
+  short_description: "Review slide spec quality."
+  default_prompt: "Use $deck-spec-review to review slide-spec.json for flow, evidence, and density."

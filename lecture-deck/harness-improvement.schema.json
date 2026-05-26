@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "itemHeadingPattern": "^### HIB-[0-9]{3} .+",
+  "requiredSections": [
+    "## Open Items",
+    "## Completed Items"
+  ],
+  "requiredOpenFields": [
+    "Status",
+    "Priority",
+    "Problem",
+    "Desired improvement",
+    "Harness layer",
+    "Suggested files",
+    "Validation"
+  ],
+  "requiredCompletedFields": [
+    "Status",
+    "Priority",
+    "Problem",
+    "Desired improvement",
+    "Harness layer",
+    "Changed files",
+    "Validation"
+  ],
+  "allowedStatus": [
+    "open",
+    "in-progress",
+    "blocked",
+    "done",
+    "deferred"
+  ],
+  "allowedPriority": [
+    "high",
+    "medium",
+    "low"
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "name": "quality-loop",
+  "description": "Run controlled improvement-loop gates and motion mutation gates; fail when a controlled defect is missed or a mutant survives.",
+  "events": ["quality-loop"],
+  "command": "node scripts/regression-gate.js --mode=quality-loop",
+  "passRule": "All controlled improvement loops report passing gateHealth, all motion mutants are killed by their expected gates, and the clean deck smoke check does not fail."
+}

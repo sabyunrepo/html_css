@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Lecture deck local raster asset manifest",
+  "type": "object",
+  "required": ["schemaVersion", "generatedAt", "assets"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "generatedAt": { "type": "string" },
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "file",
+          "sourceUrl",
+          "publisher",
+          "author",
+          "license",
+          "licenseUrl",
+          "checkedDate",
+          "edits",
+          "role",
+          "slideIds"
+        ],
+        "properties": {
+          "file": { "type": "string" },
+          "sourceUrl": { "type": "string" },
+          "publisher": { "type": "string" },
+          "author": { "type": "string" },
+          "license": { "type": "string" },
+          "licenseUrl": { "type": "string" },
+          "checkedDate": { "type": "string" },
+          "edits": { "type": "string" },
+          "role": { "type": "string" },
+          "slideIds": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 1
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": false
+}

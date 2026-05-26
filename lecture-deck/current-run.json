@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "runId": "starter-harness-example",
+  "topic": "Starter deck automation workflow",
+  "audience": "Students learning orchestrated agent workflows",
+  "outcome": "Explain the deck workflow phases and run the harness before creating a new topic.",
+  "scope": {
+    "include": [
+      "prompt contract",
+      "research and asset decisions",
+      "source brief",
+      "slide output",
+      "visual review",
+      "validation and handoff"
+    ],
+    "exclude": [
+      "topic-specific production content",
+      "historical experiment screenshots",
+      "runtime quality reports"
+    ]
+  },
+  "researchNeed": {
+    "required": false,
+    "minimumTrustedUrls": 8,
+    "minimumOfficialDocs": 5,
+    "trustedHosts": [
+      "developer.mozilla.org",
+      "www.w3.org",
+      "web.dev"
+    ],
+    "officialDocHosts": [
+      "developer.mozilla.org",
+      "www.w3.org",
+      "web.dev"
+    ],
+    "notes": "Starter evidence exists only to keep the harness check runnable before a student chooses a topic."
+  },
+  "outputReset": {
+    "requiredBeforeNewTopic": true,
+    "preserveHarness": true
+  },
+  "visualPriority": [
+    "workflow phase order",
+    "evidence before output",
+    "failure routing",
+    "validation before handoff"
+  ],
+  "assetRequirements": {
+    "minimumRasterSlides": 0,
+    "maximumCssModuleShare": 1,
+    "requireManifestForRaster": false,
+    "requiredImageCandidateSection": false,
+    "topicRequiresRealImages": false,
+    "reason": "Starter deck uses CSS modules only so students can run the harness without downloaded assets."
+  },
+  "motionPriority": [
+    "phase sequence",
+    "validation gate progression"
+  ],
+  "validationMode": "deck-loop",
+  "harnessImprovementMode": "quality-loop",
+  "requiredGates": [
+    "agent-contract-check",
+    "harness-check",
+    "render-check",
+    "stop-quality",
+    "pre-handoff"
+  ]
+}

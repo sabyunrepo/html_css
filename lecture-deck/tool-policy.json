@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "canonicalFlow": "prompt contract -> optional output reset -> research/tool selection -> source brief -> spec -> slide output -> visual/motion polish -> screenshot review -> validation -> handoff",
+  "globalRules": [
+    "Do not weaken hooks, validation scripts, quality gates, source requirements, or screenshot standards to pass.",
+    "Slide-visible claims require source evidence.",
+    "Final handoff requires validation evidence and screenshot quality evidence."
+  ],
+  "agents": {
+    "deck-researcher": {
+      "sandboxMode": "read-only",
+      "allowedActions": ["read", "web-research", "summarize-evidence"],
+      "allowedPaths": ["lecture-deck/source.md", "lecture-deck/slide-spec.json", "lecture-deck/agents/", ".codex/skills/deck-research-brief/"],
+      "requiredSkills": [".codex/skills/deck-research-brief/SKILL.md"],
+      "requiredEvidence": ["trusted URLs", "slide-visible claim mapping", "source selection notes"],
+      "prohibitedActions": ["write-output", "decide-final-scope", "weaken-gates"]
+    },
+    "deck-asset-researcher": {
+      "sandboxMode": "read-only",
+      "allowedActions": ["read", "web-research", "classify-assets", "summarize-license-metadata"],
+      "allowedPaths": ["lecture-deck/source.md", "lecture-deck/slide-spec.json", "lecture-deck/assets/illustrations/", "lecture-deck/agents/", ".codex/skills/deck-asset-research/", ".codex/skills/deck-asset-selection/"],
+      "requiredSkills": [".codex/skills/deck-asset-research/SKILL.md", ".codex/skills/deck-asset-selection/SKILL.md"],
+      "requiredEvidence": ["accepted image candidates", "rejected image candidates", "source/license metadata", "intended slide IDs"],
+      "prohibitedActions": ["write-output", "decide-final-scope", "weaken-gates"]
+    },
+    "deck-content-producer": {
+      "sandboxMode": "workspace-write",
+      "allowedActions": ["write-source", "write-spec", "write-slides", "write-handoff"],
+      "allowedPaths": ["lecture-deck/source.md", "lecture-deck/slide-spec.json", "lecture-deck/slides/", "lecture-deck/assets/", "lecture-deck/HANDOFF.md"],
+      "requiredSkills": [".codex/skills/deck-content-production/SKILL.md", ".codex/skills/deck-builder/SKILL.md"],
+      "requiredEvidence": ["current-run.json", "source.md", "slide-spec.json"],
+      "prohibitedActions": ["weaken-gates", "skip-source-contract"]
+    },
+    "deck-slide-reviewer": {
+      "sandboxMode": "read-only",
+      "allowedActions": ["review-spec", "review-flow", "review-evidence"],
+      "allowedPaths": ["lecture-deck/source.md", "lecture-deck/slide-spec.json", "lecture-deck/slides/", "lecture-deck/presenter-review.html"],
+      "requiredSkills": [".codex/skills/deck-spec-review/SKILL.md"],
+      "requiredEvidence": ["spec issues", "evidence gaps", "speaker-note separation findings"],
+      "prohibitedActions": ["write-output", "weaken-gates"]
+    },
+    "deck-visual-reviewer": {
+      "sandboxMode": "read-only",
+      "allowedActions": ["review-layout", "review-motion", "review-visual-hierarchy"],
+      "allowedPaths": ["lecture-deck/design.md", "lecture-deck/motion.md", "lecture-deck/slide-spec.json", "lecture-deck/slides/", "lecture-deck/assets/"],
+      "requiredSkills": [".codex/skills/deck-visual-motion/SKILL.md"],
+      "requiredEvidence": ["importanceMap findings", "visualForm findings", "motionPlan findings"],
+      "prohibitedActions": ["write-output", "weaken-gates"]
+    },
+    "deck-screenshot-quality-reviewer": {
+      "sandboxMode": "workspace-write",
+      "allowedActions": ["review-screenshots", "route-failures", "write-review-artifact"],
+      "allowedPaths": ["lecture-deck/.deck-quality/", "lecture-deck/screenshot-review.md", "lecture-deck/eval-corpus/"],
+      "requiredSkills": [".codex/skills/deck-screenshot-quality/SKILL.md"],
+      "requiredEvidence": ["visual-quality-report.md", "quality-remediation-plan.json", "screenshot-review.json"],
+      "prohibitedActions": ["weaken-gates", "repair-current-output-without-routing"]
+    },
+    "deck-validation-runner": {
+      "sandboxMode": "workspace-write",
+      "allowedActions": ["run-gates", "summarize-failures", "write-validation-output"],
+      "allowedPaths": ["lecture-deck/.deck-quality/", "lecture-deck/scripts/", "lecture-deck/hooks/"],
+      "requiredSkills": [".codex/skills/deck-validation-gate/SKILL.md"],
+      "requiredEvidence": ["command", "exit status", "smallest useful failure snippet"],
+      "prohibitedActions": ["edit-output", "weaken-gates"]
+    },
+    "deck-output-regenerator": {
+      "sandboxMode": "workspace-write",
+      "allowedActions": ["repair-slides", "repair-visual-css", "repair-local-assets"],
+      "allowedPaths": ["lecture-deck/slides/", "lecture-deck/assets/", "lecture-deck/HANDOFF.md"],
+      "requiredSkills": [".codex/skills/deck-screenshot-quality/SKILL.md"],
+      "requiredEvidence": ["visual-quality-report.md", "quality-remediation-plan.json", "screenshots"],
+      "prohibitedActions": ["edit-harness", "weaken-gates"]
+    },
+    "deck-workflow-improver": {
+      "sandboxMode": "workspace-write",
+      "allowedActions": ["improve-skills", "improve-agents", "improve-gates", "improve-eval-corpus"],
+      "allowedPaths": [".codex/skills/", ".codex/agents/", "lecture-deck/agents/", "lecture-deck/hooks/", "lecture-deck/scripts/", "lecture-deck/design.md", "lecture-deck/motion.md", "lecture-deck/few-shots.md", "lecture-deck/eval-corpus/"],
+      "requiredSkills": [".codex/skills/deck-screenshot-quality/SKILL.md", ".codex/skills/deck-validation-gate/SKILL.md"],
+      "requiredEvidence": ["failed gate", "recurring defect", "new or strengthened check"],
+      "prohibitedActions": ["patch-current-output-only", "weaken-gates"]
+    },
+    "deck-contract-validator": {
+      "sandboxMode": "read-only",
+      "allowedActions": ["validate-contracts", "validate-agent-policy", "validate-handoff-schema", "validate-trace"],
+      "allowedPaths": ["lecture-deck/current-run.json", "lecture-deck/tool-policy.json", "lecture-deck/agent-handoff.schema.json", "lecture-deck/.deck-quality/", ".codex/agents/", "lecture-deck/agents/"],
+      "requiredSkills": [".codex/skills/deck-validation-gate/SKILL.md"],
+      "requiredEvidence": ["contract validation result", "stale flow check", "tool policy check"],
+      "prohibitedActions": ["write-output", "weaken-gates"]
+    }
+  }
+}

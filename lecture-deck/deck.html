@@ -1,31 +1,31 @@
 <!doctype html>
 <html lang="ko">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>현충일: 기억해야 하는 날</title>
-  <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="assets/style.css">
-</head>
-<body>
-  <main class="deck-shell">
-    <header class="deck-topbar">
-      <div>
-        <strong>현충일: 기억해야 하는 날</strong>
-        <div class="deck-status" id="deckStatus">Loading deck</div>
-      </div>
-      <nav class="deck-actions" aria-label="Deck actions">
-        <a href="presenter-review.html">Presenter Review</a>
-        <button type="button" id="printDeck">Print</button>
-      </nav>
-    </header>
-    <section class="deck-stage" aria-label="Slide deck">
-      <button class="deck-nav" type="button" id="previousSlide" aria-label="Previous slide">‹</button>
-      <div class="deck-strip" id="deck"></div>
-      <button class="deck-nav" type="button" id="nextSlide" aria-label="Next slide">›</button>
-    </section>
-  </main>
-  <script src="assets/slides.js"></script>
-  <script src="assets/deck.js"></script>
-</body>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>HTML/CSS Deck Automation Harness</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="assets/style.css?v=harness">
+    <script src="assets/slides.js?v=harness" defer></script>
+    <script src="assets/deck.js?v=harness" defer></script>
+  </head>
+  <body>
+    <main class="deck-shell">
+      <header class="deck-topbar">
+        <div>
+          <strong>HTML/CSS Deck Automation Harness</strong>
+          <span class="deck-status" id="deckStatus">Loading</span>
+        </div>
+        <nav class="deck-actions" aria-label="Deck actions">
+          <a href="presenter-review.html">Presenter Review</a>
+          <button id="printDeck" type="button">Print</button>
+        </nav>
+      </header>
+      <section class="deck-stage" aria-label="Slide deck">
+        <button class="deck-nav" id="previousSlide" type="button" aria-label="Previous slide">‹</button>
+        <div class="deck-strip" id="deck"></div>
+        <button class="deck-nav" id="nextSlide" type="button" aria-label="Next slide">›</button>
+      </section>
+    </main>
+  </body>
 </html>

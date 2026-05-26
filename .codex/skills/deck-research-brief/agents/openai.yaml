@@ -1,0 +1,4 @@
+interface:
+  display_name: "Deck Research Brief"
+  short_description: "Research deck evidence brief."
+  default_prompt: "Use $deck-research-brief to research evidence and create a source brief for this deck."

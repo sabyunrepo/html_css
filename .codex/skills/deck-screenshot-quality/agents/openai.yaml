@@ -1,0 +1,4 @@
+interface:
+  display_name: "Deck Screenshot Quality"
+  short_description: "Review rendered deck quality."
+  default_prompt: "Use $deck-screenshot-quality to review rendered screenshots and route deck quality fixes."

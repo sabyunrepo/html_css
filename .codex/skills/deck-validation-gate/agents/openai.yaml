@@ -1,0 +1,4 @@
+interface:
+  display_name: "Deck Validation Gate"
+  short_description: "Run deck validation gates."
+  default_prompt: "Use $deck-validation-gate to run and interpret the HTML/CSS deck validation hooks."

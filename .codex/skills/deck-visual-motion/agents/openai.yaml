@@ -1,0 +1,4 @@
+interface:
+  display_name: "Deck Visual Motion"
+  short_description: "Design deck visuals and motion."
+  default_prompt: "Use $deck-visual-motion to design or review deck visuals, local image assets, and CSS motion."

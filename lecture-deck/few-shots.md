@@ -83,35 +83,48 @@ Why it fails:
 ## Good CSS Animation
 
 ```css
-:root {
-  --motion-slow: 1400ms;
-  --ease-calm: cubic-bezier(0.2, 0, 0, 1);
-}
-
 .clock-ring {
-  animation: ring-breathe var(--motion-slow) var(--ease-calm) both;
-}
-
-@keyframes ring-breathe {
-  from {
-    opacity: 0.64;
-    transform: scale(0.96);
-  }
-
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  animation: card-place var(--motion-medium) var(--ease-calm) both;
+  animation-delay: calc(var(--delay-step) * 1);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .clock-ring {
     animation: none !important;
     opacity: 1;
-    transform: scale(1);
+    transform: none;
   }
 }
 ```
+
+Why it works:
+
+- The motion reuses a named recipe from `motion.md`.
+- Timing, easing, and delay come from `assets/style.css` motion tokens.
+- The animated properties are only `opacity` and `transform`.
+- A reduced-motion user gets the final readable state without movement.
+
+## Good CSS Choreography
+
+```css
+.deck-frame.is-active .layer {
+  animation: card-place var(--motion-medium) var(--ease-calm) both;
+}
+
+.deck-frame.is-active .layer:nth-child(2) {
+  animation-delay: var(--delay-step);
+}
+
+.deck-frame.is-active .layer:nth-child(3) {
+  animation-delay: calc(var(--delay-step) * 2);
+}
+```
+
+Why it works:
+
+- Multiple small elements move in a readable order.
+- Staggered timing explains sequence instead of adding a decorative fade.
+- The timing stays short enough for a presentation slide.
 
 ## Bad CSS Animation
 
@@ -134,6 +147,37 @@ Why it fails:
 - `top`은 layout을 다시 계산하게 만든다.
 - `box-shadow`는 paint 비용을 키운다.
 - reduced-motion fallback이 없다.
+
+## Bad CSS Choreography
+
+```css
+.visual {
+  animation: fade-in 900ms ease both;
+}
+```
+
+Why it fails:
+
+- One container fade does not explain sequence, focus, or cause/effect.
+- There is no staggered timing, so the motion reads as polish rather than content.
+- A declared motion slide should animate small purposeful targets, not the whole scene.
+
+## Bad Overflow-Prone Visual
+
+```css
+.flow-arrow::after {
+  right: -6px;
+  width: 12px;
+  height: 12px;
+}
+```
+
+Why it fails:
+
+- Pseudo-elements drawn outside their parent can increase `scrollWidth` or `scrollHeight`.
+- The render gate checks descendants for overflow, so arrowheads, labels, and markers must stay inside their own boxes.
+- Prefer an inline arrow character or a contained CSS shape.
+- Mobile navigation must not intersect the slide rectangle. Fixed bottom buttons can cover content while screenshots still look mostly acceptable, so place controls in normal flow or verify a reserved safe area.
 
 ## Good Presenter Script
 

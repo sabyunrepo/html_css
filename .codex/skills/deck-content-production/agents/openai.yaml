@@ -1,0 +1,4 @@
+interface:
+  display_name: "Deck Content Production"
+  short_description: "Produce deck source and slides."
+  default_prompt: "Use $deck-content-production to generate source, slide spec, slide HTML, and handoff files."

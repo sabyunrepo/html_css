@@ -1,0 +1,4 @@
+interface:
+  display_name: "Deck Builder"
+  short_description: "Orchestrate HTML deck builds."
+  default_prompt: "Use $deck-builder to orchestrate this HTML/CSS lecture deck workflow."

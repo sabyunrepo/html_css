@@ -1,22 +1,23 @@
 <!doctype html>
 <html lang="ko">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Presenter Review · 현충일</title>
-  <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="assets/style.css">
-</head>
-<body>
-  <main class="review-page">
-    <header>
-      <a href="deck.html">Back to deck</a>
-      <h1>Presenter Review</h1>
-      <p class="subtitle">현충일 강의의 speaker note와 evidence를 여기에서 확인합니다.</p>
-    </header>
-    <section class="review-list" id="review" aria-label="Presenter review cards"></section>
-  </main>
-  <script src="assets/slides.js"></script>
-  <script src="assets/presenter-review.js"></script>
-</body>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Presenter Review - HTML/CSS Deck Automation Harness</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="assets/style.css?v=harness">
+    <script src="assets/slides.js?v=harness" defer></script>
+    <script src="assets/presenter-review.js?v=harness" defer></script>
+  </head>
+  <body>
+    <main class="review-page">
+      <header>
+        <p class="eyebrow">Presenter Review</p>
+        <h1>HTML/CSS Deck Automation Harness</h1>
+        <p class="subtitle">슬라이드별 핵심 메시지, 발표자 노트, 근거 링크를 검토합니다.</p>
+        <p><a href="deck.html">Back to deck</a></p>
+      </header>
+      <section class="review-list" id="review" aria-label="Presenter notes"></section>
+    </main>
+  </body>
 </html>
