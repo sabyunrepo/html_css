@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "runId": "starter-harness-example",
+  "runId": "starter-harness-reset",
   "topic": "Starter deck automation workflow",
   "audience": "Students learning orchestrated agent workflows",
-  "outcome": "Explain the deck workflow phases and run the harness before creating a new topic.",
+  "outcome": "Run the harness and prepare a new topic before generating deck output.",
   "scope": {
     "include": [
       "prompt contract",
@@ -33,7 +33,7 @@
       "www.w3.org",
       "web.dev"
     ],
-    "notes": "Starter evidence exists only to keep the harness check runnable before a student chooses a topic."
+    "notes": "Reset state is starter-safe. Prepare a topic-specific run before production."
   },
   "outputReset": {
     "requiredBeforeNewTopic": true,
@@ -51,7 +51,7 @@
     "requireManifestForRaster": false,
     "requiredImageCandidateSection": false,
     "topicRequiresRealImages": false,
-    "reason": "Starter deck uses CSS modules only so students can run the harness without downloaded assets."
+    "reason": "Reset state uses no topic-specific downloaded assets."
   },
   "motionPriority": [
     "phase sequence",

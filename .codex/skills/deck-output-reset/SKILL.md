@@ -49,7 +49,10 @@ Remove generated deck output:
 - `lecture-deck/assets/slides.js`
 - `lecture-deck/assets/visuals.css`
 - `lecture-deck/slides/*.html`
+- `lecture-deck/slides/assets/`
 - `lecture-deck/.deck-quality/`
+- `lecture-deck/.deck-quality-archive/`
+- `.codex/stop-continuation-state.json`
 - every local raster/generated file under `lecture-deck/assets/illustrations/`
 
 Normalize preserved shell metadata:
@@ -58,6 +61,7 @@ Normalize preserved shell metadata:
 - reset `lecture-deck/presenter-review.html` title/heading to the same neutral title
 - reset generated cache query strings such as `?v=<old-topic>` to `?v=harness`
 - reset `lecture-deck/assets/illustrations/manifest.json` to an empty manifest with `assets: []`
+- reset `lecture-deck/current-run.json` to a neutral starter-safe run contract so no prior topic leaks into the next run
 
 ## Required Command
 

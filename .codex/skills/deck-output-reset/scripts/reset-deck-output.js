@@ -9,6 +9,75 @@ const EMPTY_MANIFEST = {
   generatedAt: "reset",
   assets: []
 };
+const RESET_CURRENT_RUN = {
+  schemaVersion: 1,
+  runId: "starter-harness-reset",
+  topic: "Starter deck automation workflow",
+  audience: "Students learning orchestrated agent workflows",
+  outcome: "Run the harness and prepare a new topic before generating deck output.",
+  scope: {
+    include: [
+      "prompt contract",
+      "research and asset decisions",
+      "source brief",
+      "slide output",
+      "visual review",
+      "validation and handoff"
+    ],
+    exclude: [
+      "topic-specific production content",
+      "historical experiment screenshots",
+      "runtime quality reports"
+    ]
+  },
+  researchNeed: {
+    required: false,
+    minimumTrustedUrls: 8,
+    minimumOfficialDocs: 5,
+    trustedHosts: [
+      "developer.mozilla.org",
+      "www.w3.org",
+      "web.dev"
+    ],
+    officialDocHosts: [
+      "developer.mozilla.org",
+      "www.w3.org",
+      "web.dev"
+    ],
+    notes: "Reset state is starter-safe. Prepare a topic-specific run before production."
+  },
+  outputReset: {
+    requiredBeforeNewTopic: true,
+    preserveHarness: true
+  },
+  visualPriority: [
+    "workflow phase order",
+    "evidence before output",
+    "failure routing",
+    "validation before handoff"
+  ],
+  assetRequirements: {
+    minimumRasterSlides: 0,
+    maximumCssModuleShare: 1,
+    requireManifestForRaster: false,
+    requiredImageCandidateSection: false,
+    topicRequiresRealImages: false,
+    reason: "Reset state uses no topic-specific downloaded assets."
+  },
+  motionPriority: [
+    "phase sequence",
+    "validation gate progression"
+  ],
+  validationMode: "deck-loop",
+  harnessImprovementMode: "quality-loop",
+  requiredGates: [
+    "agent-contract-check",
+    "harness-check",
+    "render-check",
+    "stop-quality",
+    "pre-handoff"
+  ]
+};
 
 function readRunId(deckRoot) {
   const runPath = path.join(deckRoot, "current-run.json");
@@ -59,6 +128,14 @@ function listHtmlSlides(deckRoot) {
     .map((name) => path.join(slidesDir, name));
 }
 
+function listSlideAssetOutputs(deckRoot) {
+  const slideAssetDir = path.join(deckRoot, "slides/assets");
+  if (!fs.existsSync(slideAssetDir)) {
+    return [];
+  }
+  return [slideAssetDir];
+}
+
 function listIllustrationOutputs(deckRoot) {
   const illustrationsDir = path.join(deckRoot, "assets/illustrations");
   if (!fs.existsSync(illustrationsDir)) {
@@ -69,7 +146,7 @@ function listIllustrationOutputs(deckRoot) {
     .map((name) => path.join(illustrationsDir, name));
 }
 
-function buildResetPlan(deckRoot) {
+function buildResetPlan(root, deckRoot) {
   const explicit = [
     "source.md",
     "slide-spec.json",
@@ -77,15 +154,21 @@ function buildResetPlan(deckRoot) {
     "assets/slides.js",
     "assets/visuals.css"
   ].map((item) => path.join(deckRoot, item));
+  const rootRuntimeFiles = [
+    ".codex/stop-continuation-state.json"
+  ].map((item) => path.join(root, item));
 
   const files = [
     ...explicit,
+    ...rootRuntimeFiles,
     ...listHtmlSlides(deckRoot),
     ...listIllustrationOutputs(deckRoot)
   ].filter((filePath) => fs.existsSync(filePath));
 
   const directories = [
-    path.join(deckRoot, ".deck-quality")
+    path.join(deckRoot, ".deck-quality"),
+    path.join(deckRoot, ".deck-quality-archive"),
+    ...listSlideAssetOutputs(deckRoot)
   ].filter((dirPath) => fs.existsSync(dirPath));
 
   return { files, directories };
@@ -144,6 +227,12 @@ function resetAssetManifest(deckRoot) {
   return manifestPath;
 }
 
+function resetCurrentRun(deckRoot) {
+  const runPath = path.join(deckRoot, "current-run.json");
+  fs.writeFileSync(runPath, `${JSON.stringify(RESET_CURRENT_RUN, null, 2)}\n`);
+  return runPath;
+}
+
 function formatRelative(root, paths) {
   return paths.map((item) => path.relative(root, item)).sort();
 }
@@ -151,17 +240,17 @@ function formatRelative(root, paths) {
 function main() {
   const options = parseArgs(process.argv.slice(2));
   const deckRoot = assertDeckRoot(options.root);
-  const plan = buildResetPlan(deckRoot);
+  const plan = buildResetPlan(options.root, deckRoot);
   const shellFiles = [
     path.join(deckRoot, "deck.html"),
     path.join(deckRoot, "presenter-review.html")
   ];
 
   if (options.apply) {
-    archiveWorkflowTrace(deckRoot);
     removePlan(plan);
     resetShellMetadata(deckRoot);
     resetAssetManifest(deckRoot);
+    resetCurrentRun(deckRoot);
   }
 
   const payload = {
@@ -173,12 +262,15 @@ function main() {
     resetManifests: formatRelative(options.root, [
       path.join(deckRoot, "assets/illustrations/manifest.json")
     ]),
+    resetCurrentRun: formatRelative(options.root, [
+      path.join(deckRoot, "current-run.json")
+    ])[0],
     traceBoundary: {
       currentRunId: readRunId(deckRoot),
       workflowTraceReset: formatRelative(options.root, [
         path.join(deckRoot, ".deck-quality/workflow-trace.jsonl")
       ])[0],
-      archiveDirectory: formatRelative(options.root, [
+      archiveDirectoryRemoved: formatRelative(options.root, [
         path.join(deckRoot, ".deck-quality-archive")
       ])[0]
     },
