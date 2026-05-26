@@ -11,10 +11,26 @@ Few-shot은 실습 3에 둔다. `slide-spec.json` 바로 다음에 넣어야 출
   "title": "검증은 마지막 장식이 아니라 통과문입니다",
   "message": "슬라이드가 생성된 뒤가 아니라 handoff 전 반드시 자동 검증을 통과해야 한다.",
   "visual": "Gate visual with pass/fail states and evidence list.",
-  "speakerNote": "여기서 검증은 사람이 대충 훑는 과정이 아닙니다. 파일 누락, 링크, note 노출, overflow를 기계적으로 확인하는 통과문입니다.",
+  "learningObjective": "검증 gate가 발표 직전 품질을 보장하는 이유를 설명한다.",
+  "audienceQuestion": "왜 슬라이드를 다 만든 뒤에도 자동 검증이 필요한가?",
+  "explanationBeats": [
+    "발표자료는 HTML, CSS, metadata, presenter note가 함께 맞아야 한다.",
+    "검증 gate는 파일 누락, 링크, note 노출, overflow를 기계적으로 확인한다.",
+    "handoff 전 gate 실패를 고치면 다음 주제에서도 같은 품질 기준이 반복된다."
+  ],
+  "exampleOrScenario": "학생이 slide HTML은 만들었지만 presenter review에서 note가 비어 있는 경우를 든다.",
+  "misconceptionOrCaveat": "사람이 한 번 훑어보는 리뷰만으로는 숨은 note 노출이나 mobile overflow를 놓칠 수 있다.",
+  "takeaway": "발표 직전에는 감상평보다 gate 결과와 실패 증거를 먼저 본다.",
+  "speakerNote": "이 장의 핵심은 검증을 마지막 장식으로 보지 않는 것입니다. HTML 슬라이드는 화면만 예쁘면 끝나는 파일이 아니라, 링크, note 분리, 모바일 overflow, presenter review까지 같이 맞아야 합니다. 예를 들어 슬라이드 본문은 멀쩡한데 발표자 note가 비어 있으면 실제 발표자는 설명 흐름을 잃습니다. 반대로 note가 deck.html에 노출되면 청중에게 보여서는 안 되는 내용이 보입니다. 그래서 handoff 전에는 감상평보다 gate 결과와 실패 증거를 먼저 확인해야 합니다.",
   "evidence": ["scripts/verify-deck.js", "hooks/verify-deck.json"]
 }
 ```
+
+Why it works:
+
+- `audienceQuestion`이 슬라이드의 교육 목적을 잡아 준다.
+- `explanationBeats`가 설명 순서를 제공해서 요약문만 있는 슬라이드를 막는다.
+- `speakerNote`가 화면 문구 반복이 아니라 30-60초 발화 흐름을 제공한다.
 
 ## Good Motion Spec
 
@@ -50,14 +66,16 @@ Why it works:
 {
   "title": "검증",
   "content": "검증이 중요하다",
-  "visual": "nice image"
+  "visual": "nice image",
+  "speakerNote": "검증은 중요합니다. 검증을 꼭 해야 합니다."
 }
 ```
 
 Why it fails:
 
 - `message`가 없어 한 장에서 말할 핵심이 흐려진다.
-- `speakerNote`가 없어 발표자 검토 화면을 만들 수 없다.
+- `learningObjective`, `audienceQuestion`, `explanationBeats`, `exampleOrScenario`, `misconceptionOrCaveat`, `takeaway`가 없어 교육 흐름을 검토할 수 없다.
+- `speakerNote`가 화면 문구를 반복하는 짧은 요약이라 발표자가 30-60초 설명할 수 없다.
 - `evidence`가 없어 근거와 출처를 확인할 수 없다.
 
 ## Bad Motion Spec

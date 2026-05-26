@@ -37,6 +37,14 @@ const MIN_VISUAL_FORM_UNIQUE_COUNT = 5;
 const MAX_VISUAL_ARCHETYPE_SHARE = 0.35;
 const MAX_VISUAL_FORM_SHARE = 0.35;
 const MAX_ANIMATED_SLIDE_SHARE = 0.5;
+const MIN_SPEAKER_NOTE_CHARS = 180;
+const CONTENT_DEPTH_REQUIRED_FIELDS = [
+  "learningObjective",
+  "audienceQuestion",
+  "exampleOrScenario",
+  "misconceptionOrCaveat",
+  "takeaway"
+];
 const ASSET_DECISION_MODES = new Set([
   "official-image",
   "local-raster",
@@ -98,6 +106,22 @@ function getSpec() {
     throw new Error("slide-spec.json must include a non-empty slides array");
   }
   return spec;
+}
+
+function getDeckSlidesMetadata() {
+  if (!fileExists("assets/slides.js")) {
+    return [];
+  }
+  const text = readText("assets/slides.js");
+  const match = text.match(/window\.DECK_SLIDES\s*=\s*(\[[\s\S]*?\]);/);
+  if (!match) {
+    throw new Error("assets/slides.js must assign window.DECK_SLIDES to a JSON array");
+  }
+  const slides = JSON.parse(match[1]);
+  if (!Array.isArray(slides)) {
+    throw new Error("assets/slides.js window.DECK_SLIDES must be an array");
+  }
+  return slides;
 }
 
 function getCurrentRun() {
@@ -392,6 +416,131 @@ function isTrustedResearchUrl(url) {
 
 function nonEmptyString(value) {
   return typeof value === "string" && value.trim().length > 0;
+}
+
+function sameStringArray(left, right) {
+  if (!Array.isArray(left) || !Array.isArray(right)) return false;
+  if (left.length !== right.length) return false;
+  return left.every((value, index) => value === right[index]);
+}
+
+function runDeckSlidesMetadataChecks(spec) {
+  let deckSlides;
+  try {
+    deckSlides = getDeckSlidesMetadata();
+  } catch (error) {
+    fail("deck slides metadata", error.message);
+    return;
+  }
+
+  const issues = [];
+  if (deckSlides.length !== spec.slides.length) {
+    issues.push(`count:${deckSlides.length}!=${spec.slides.length}`);
+  }
+
+  const metadataById = new Map(deckSlides.map((slide) => [slide.id, slide]));
+  spec.slides.forEach((specSlide) => {
+    const metadata = metadataById.get(specSlide.id);
+    if (!metadata) {
+      issues.push(`${specSlide.id}:missing-metadata`);
+      return;
+    }
+    ["file", "title", "speakerNote"].forEach((field) => {
+      if (metadata[field] !== specSlide[field]) {
+        issues.push(`${specSlide.id}:metadata-${field}-drift`);
+      }
+    });
+    if (!sameStringArray(metadata.evidence || [], specSlide.evidence || [])) {
+      issues.push(`${specSlide.id}:metadata-evidence-drift`);
+    }
+  });
+
+  const specIds = new Set(spec.slides.map((slide) => slide.id));
+  deckSlides.forEach((metadata) => {
+    if (!specIds.has(metadata.id)) {
+      issues.push(`${metadata.id || "unknown"}:orphan-metadata`);
+    }
+  });
+
+  if (issues.length) {
+    fail("deck slides metadata", issues.join(", "));
+  } else {
+    pass("deck slides metadata", `${deckSlides.length} metadata entries match slide-spec.json`);
+  }
+}
+
+function normalizeForSimilarity(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFKC")
+    .replace(/[\s"'`.,:;!?()[\]{}<>|/\\_-]+/g, "");
+}
+
+function charShingles(value, size = 3) {
+  const normalized = normalizeForSimilarity(value);
+  if (normalized.length <= size) {
+    return normalized ? new Set([normalized]) : new Set();
+  }
+  const shingles = new Set();
+  for (let index = 0; index <= normalized.length - size; index += 1) {
+    shingles.add(normalized.slice(index, index + size));
+  }
+  return shingles;
+}
+
+function jaccardSimilarity(a, b) {
+  if (!a.size && !b.size) return 0;
+  const intersection = [...a].filter((item) => b.has(item)).length;
+  const union = new Set([...a, ...b]).size;
+  return union === 0 ? 0 : intersection / union;
+}
+
+function mostlyRepeatsScreenText(slide) {
+  const screenText = [slide.title, slide.message].filter(Boolean).join(" ");
+  const note = slide.speakerNote || "";
+  const normalizedScreen = normalizeForSimilarity(screenText);
+  const normalizedNote = normalizeForSimilarity(note);
+  if (!normalizedScreen || !normalizedNote) return false;
+  if (normalizedNote.includes(normalizedScreen) && normalizedNote.length < normalizedScreen.length * 2.5) {
+    return true;
+  }
+  const similarity = jaccardSimilarity(charShingles(screenText), charShingles(note));
+  return similarity >= 0.65 && normalizedNote.length < normalizedScreen.length * 3;
+}
+
+function runContentDepthChecks(spec) {
+  const invalid = [];
+
+  spec.slides.forEach((slide) => {
+    CONTENT_DEPTH_REQUIRED_FIELDS.forEach((field) => {
+      if (!nonEmptyString(slide[field])) {
+        invalid.push(`${slide.id}:missing-${field}`);
+      }
+    });
+
+    if (!Array.isArray(slide.explanationBeats)) {
+      invalid.push(`${slide.id}:missing-explanationBeats`);
+    } else {
+      const beats = slide.explanationBeats.filter(nonEmptyString);
+      if (beats.length < 3) {
+        invalid.push(`${slide.id}:too-few-explanationBeats`);
+      }
+    }
+
+    if (!nonEmptyString(slide.speakerNote)) {
+      invalid.push(`${slide.id}:missing-speakerNote`);
+    } else if (slide.speakerNote.trim().length < MIN_SPEAKER_NOTE_CHARS) {
+      invalid.push(`${slide.id}:short-speakerNote`);
+    } else if (mostlyRepeatsScreenText(slide)) {
+      invalid.push(`${slide.id}:repeated-screen-text-note`);
+    }
+  });
+
+  if (invalid.length) {
+    fail("content depth", invalid.join(", "));
+  } else {
+    pass("content depth", `${spec.slides.length} slide(s) include teaching fields and presenter-depth notes`);
+  }
 }
 
 function runResearchQualityChecks(spec) {
@@ -1309,11 +1458,13 @@ async function main() {
     spec = getSpec();
     if (mode === "all" || mode === "harness") {
       runStaticChecks(spec);
+      runDeckSlidesMetadataChecks(spec);
       runLayerContractChecks();
       runResearchQualityChecks(spec);
       runMotionContractChecks();
       runVisualArchetypeChecks(spec);
       runMotionDecisionChecks(spec);
+      runContentDepthChecks(spec);
       runImportanceMapChecks(spec);
       runAssetDecisionChecks(spec);
       runAssetAdequacyChecks(spec);

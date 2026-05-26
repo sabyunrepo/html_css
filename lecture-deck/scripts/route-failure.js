@@ -92,7 +92,7 @@ function readText(relativePath) {
 function routeForValidationName(name = "") {
   if (/research source|slide evidence/i.test(name)) return "research";
   if (/image source|asset|raster|manifest|css-module/i.test(name)) return "asset";
-  if (/slide count|slide spec|broken links|importance map|asset decision|visual archetype|visual form/i.test(name)) return "content";
+  if (/slide count|slide spec|deck slides metadata|content depth|broken links|importance map|asset decision|visual archetype|visual form/i.test(name)) return "content";
   if (/motion|animation|reduced motion|finite/i.test(name)) return "visual";
   if (/desktop|mobile|overflow|note exposure|presenter|browser runtime/i.test(name)) return "visual";
   if (/current run|tool policy|agent handoff|agent phase|workflow trace|reset boundary|canonical flow|hook contract/i.test(name)) return "contract";

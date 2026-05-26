@@ -38,6 +38,54 @@ Status values:
 
 ## Completed Items
 
+### HIB-010 Deck Metadata Drift Gate
+
+- Status: done
+- Priority: high
+- Problem: `slide-spec.json` and `assets/slides.js` could drift in `id`, `file`, `title`, `speakerNote`, or `evidence` while validation still passed, leaving presenter metadata inconsistent with the source slide contract.
+- Desired improvement: Compare presenter metadata against `slide-spec.json` during `harness-check` and route metadata drift failures to content regeneration.
+- Harness layer: deck validator, failure routing, regression test
+- Changed files:
+  - `lecture-deck/scripts/verify-deck.js`
+  - `lecture-deck/scripts/validation-result.test.js`
+  - `lecture-deck/scripts/route-failure.js`
+  - `lecture-deck/scripts/route-failure.test.js`
+- Validation:
+  - `node --test lecture-deck/scripts/validation-result.test.js lecture-deck/scripts/route-failure.test.js`
+  - `node lecture-deck/scripts/run-hook.js harness-check`
+
+### HIB-009 Content Depth Failure Routing
+
+- Status: done
+- Priority: high
+- Problem: After the content-depth validator was added, `route-failure.js` treated `FAIL content depth` as an unclassified validation failure and repeatedly routed back to `deck-validation-runner`.
+- Desired improvement: Route content-depth validation failures to `deck-content-producer` so current spec and presenter-note content can be regenerated under the strengthened contract.
+- Harness layer: failure routing, regression test
+- Changed files:
+  - `lecture-deck/scripts/route-failure.js`
+  - `lecture-deck/scripts/route-failure.test.js`
+- Validation:
+  - `node --test lecture-deck/scripts/route-failure.test.js`
+  - `node lecture-deck/scripts/route-failure.js --json`
+
+### HIB-008 Content Depth Gate
+
+- Status: done
+- Priority: high
+- Problem: A deck could pass with shallow slide specs and speaker notes that only repeated screen text, producing weak presentation content even when visual gates passed.
+- Desired improvement: Require explicit teaching fields in every slide spec and enforce presenter-depth speaker notes that support a 30-60 second explanation.
+- Harness layer: content production skill, spec review skill, few-shots, deck validator, starter export fixtures
+- Changed files:
+  - `.codex/skills/deck-content-production/SKILL.md`
+  - `.codex/skills/deck-spec-review/SKILL.md`
+  - `lecture-deck/few-shots.md`
+  - `lecture-deck/scripts/verify-deck.js`
+  - `lecture-deck/scripts/validation-result.test.js`
+  - `lecture-deck/scripts/export-starter.js`
+- Validation:
+  - `node --test lecture-deck/scripts/validation-result.test.js lecture-deck/scripts/export-starter.test.js`
+  - `node lecture-deck/scripts/run-hook.js harness-check`
+
 ### HIB-006 Student Tutorial Runbook
 
 - Status: done

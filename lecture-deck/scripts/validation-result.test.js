@@ -106,6 +106,23 @@ function ensureGeneratedFixtureFiles(deckRoot) {
       motionDecision: { mode: "static", reason: "The map is a static summary." }
     }
   ];
+  slides.forEach((slide, index) => {
+    slide.learningObjective = `Explain the teaching point for ${slide.title} using source-backed context.`;
+    slide.audienceQuestion = `What should the audience understand about ${slide.title}?`;
+    slide.explanationBeats = [
+      `${slide.title} starts from the visible claim on the slide.`,
+      `The evidence pointer anchors the claim in a trusted source instead of a decorative summary.`,
+      `The presenter uses the visual to decide what the audience should do or remember next.`
+    ];
+    slide.exampleOrScenario = `Fixture scenario ${index + 1}: compare a shallow summary slide with a sourced teaching slide.`;
+    slide.misconceptionOrCaveat = "Do not treat the headline alone as enough explanation; the presenter must add context and limits.";
+    slide.takeaway = `Use ${slide.title} as a teachable step, not as a label-only summary.`;
+    slide.speakerNote = [
+      `${slide.speakerNote} The presenter should first restate the problem in plain language, then point to the evidence-backed visual rather than reading the title.`,
+      `For example, this fixture slide asks the audience to compare a shallow summary with a concrete workflow step, so the visual becomes proof or sequence instead of decoration.`,
+      "The caveat is that a single headline can sound convincing while hiding missing context. Close by naming the action the audience should take after this slide."
+    ].join(" ");
+  });
 
   fs.rmSync(path.join(deckRoot, "slides"), { recursive: true, force: true });
   fs.mkdirSync(path.join(deckRoot, "slides"), { recursive: true });
@@ -167,7 +184,17 @@ function ensureGeneratedFixtureFiles(deckRoot) {
     }
   }, null, 2)}\n`);
   fs.writeFileSync(path.join(deckRoot, "HANDOFF.md"), "# Fixture handoff\n");
-  fs.writeFileSync(path.join(deckRoot, "assets/slides.js"), "window.DECK_SLIDES = [];\n");
+  fs.writeFileSync(path.join(deckRoot, "assets/slides.js"), [
+    "window.DECK_SLIDES = ",
+    JSON.stringify(slides.map((slide) => ({
+      id: slide.id,
+      file: slide.file,
+      title: slide.title,
+      speakerNote: slide.speakerNote,
+      evidence: slide.evidence
+    })), null, 2),
+    ";\n"
+  ].join(""));
   fs.writeFileSync(path.join(deckRoot, "assets/illustrations/claude-design-announcement.png"), "");
   fs.writeFileSync(path.join(deckRoot, "assets/illustrations/manifest.json"), `${JSON.stringify({
     schemaVersion: 1,
@@ -468,4 +495,45 @@ test("verify-deck rejects motionPlan targets with fewer than three targets for m
   assert.equal(result.status, 1);
   assert.match(result.stdout, /FAIL motion plan coverage/);
   assert.match(result.stdout, /chat-canvas:too-few-targets/);
+});
+
+test("verify-deck rejects shallow slide specs without teaching depth", () => {
+  const deckRoot = withSpecContracts(copyDeckFixture());
+  const specPath = path.join(deckRoot, "slide-spec.json");
+  const spec = JSON.parse(fs.readFileSync(specPath, "utf8"));
+  delete spec.slides[0].learningObjective;
+  spec.slides[1].explanationBeats = ["Only one beat"];
+  spec.slides[2].speakerNote = spec.slides[2].title;
+  fs.writeFileSync(specPath, `${JSON.stringify(spec, null, 2)}\n`);
+
+  const result = runVerify(deckRoot);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /FAIL content depth/);
+  assert.match(result.stdout, /what-is-claude-design:missing-learningObjective/);
+  assert.match(result.stdout, /chat-canvas:too-few-explanationBeats/);
+  assert.match(result.stdout, /source-intake:short-speakerNote/);
+});
+
+test("verify-deck rejects slide spec and deck metadata drift", () => {
+  const deckRoot = withSpecContracts(copyDeckFixture());
+  const slidesJsPath = path.join(deckRoot, "assets/slides.js");
+  const spec = JSON.parse(fs.readFileSync(path.join(deckRoot, "slide-spec.json"), "utf8"));
+  const metadata = spec.slides.map((slide) => ({
+    id: slide.id,
+    file: slide.file,
+    title: slide.title,
+    speakerNote: slide.speakerNote,
+    evidence: slide.evidence
+  }));
+  metadata[0].evidence = ["https://example.com/drift"];
+  metadata[1].title = "Drifted title";
+  fs.writeFileSync(slidesJsPath, `window.DECK_SLIDES = ${JSON.stringify(metadata, null, 2)};\n`);
+
+  const result = runVerify(deckRoot);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /FAIL deck slides metadata/);
+  assert.match(result.stdout, /what-is-claude-design:metadata-evidence-drift/);
+  assert.match(result.stdout, /chat-canvas:metadata-title-drift/);
 });

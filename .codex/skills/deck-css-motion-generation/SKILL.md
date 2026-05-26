@@ -53,6 +53,7 @@ Animated slides must include:
 - Use `--motion-fast`, `--motion-medium`, `--motion-slow`, `--motion-rise`, `--motion-scale-start`, `--delay-step`, and `--ease-calm`.
 - Add every animated selector to `@media (prefers-reduced-motion: reduce)`.
 - Do not animate text readability, layout, colors, borders, shadows, backgrounds, widths, or heights.
+- Prefer stable classes or data attributes for `motionPlan.targets`. Avoid brittle child-index selectors such as `:nth-child()` when non-target helper elements like rails, labels, or decorative lines share the same parent; if an index selector is unavoidable, verify it against the final DOM before validation.
 
 ## Rejection Rules
 
@@ -60,4 +61,5 @@ Animated slides must include:
 - Reject motion with fewer than three meaningful targets unless the slide has only one visual object and the reason explains why.
 - Reject static slides that contain active animation.
 - Reject animated slides where DOM selectors do not match `motionPlan.targets`.
+- Reject animated slides where `motionPlan.targets` depend on a child index that can shift when a rail, label, or helper element is inserted before the animated nodes.
 - Reject decorative motion that does not explain sequence, focus, state change, or cause/effect.

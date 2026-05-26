@@ -267,6 +267,28 @@ function buildStarterCurrentRun() {
   };
 }
 
+function buildStarterTeachingFields(title, message, visual, index) {
+  const phase = index + 1;
+  return {
+    learningObjective: `Explain why ${title.toLowerCase()} is required before moving to the next deck workflow phase.`,
+    audienceQuestion: `What decision does phase ${phase} help the deck team make?`,
+    explanationBeats: [
+      `${title} gives the team a clear checkpoint instead of a loose task label.`,
+      `The phase output connects the visible slide claim to source, spec, visual, or validation evidence.`,
+      `The next phase should start only after this checkpoint is explicit enough for another agent to inspect.`
+    ],
+    exampleOrScenario: `Starter scenario: a student tries to skip ${title.toLowerCase()} and then cannot explain why "${message}" is supported.`,
+    misconceptionOrCaveat: "The phase label is not enough; the presenter must explain the evidence, decision, or risk that the phase controls.",
+    takeaway: `Use ${title.toLowerCase()} as a teachable checkpoint with evidence, not as a summary-only slide.`,
+    speakerNote: [
+      `This starter slide teaches ${title.toLowerCase()} as a workflow checkpoint, not as a decorative heading.`,
+      `The presenter should explain how the visible claim connects to the ${visual} visual and what evidence or decision the team must inspect before moving on.`,
+      `For example, if a student skips this step, the next agent may receive a slide request without enough source, spec, or validation context to judge quality.`,
+      "The caveat is that the starter deck is only scaffolding; in a real topic, replace this note with topic-specific explanation, example, caveat, and takeaway."
+    ].join(" ")
+  };
+}
+
 function buildStarterSpec() {
   const archetypes = ["contract", "source", "map", "stack", "review", "gate"];
   const forms = ["checklist", "board", "matrix", "stack", "grid", "timeline"];
@@ -281,6 +303,7 @@ function buildStarterSpec() {
         title,
         message,
         visual,
+        ...buildStarterTeachingFields(title, message, visual, index),
         visualArchetype: archetypes[index],
         visualForm: forms[index],
         importanceMap: {
@@ -324,7 +347,6 @@ function buildStarterSpec() {
             reducedMotion: "Disable animation and show all elements."
           }
         } : {}),
-        speakerNote: `Starter note for ${title}. Replace this with topic-specific teaching notes after research.`,
         evidence
       };
     })

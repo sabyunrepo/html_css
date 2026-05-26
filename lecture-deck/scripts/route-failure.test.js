@@ -69,6 +69,44 @@ test("route-failure routes asset validation failures to deck-asset-researcher", 
   assert.equal(parseOutput(result).recommendedAgent, "deck-asset-researcher");
 });
 
+test("route-failure routes content-depth validation failures to deck-content-producer", () => {
+  const deckRoot = makeDeckRoot();
+  writeJson(deckRoot, ".deck-quality/validation-result.json", {
+    schemaVersion: 1,
+    status: "fail",
+    results: [
+      { ok: false, name: "content depth", detail: "slide-01:missing-learningObjective" }
+    ]
+  });
+
+  const result = runRoute(deckRoot);
+
+  assert.equal(result.status, 2);
+  const route = parseOutput(result);
+  assert.equal(route.recommendedAgent, "deck-content-producer");
+  assert.equal(route.phase, "slide output");
+  assert.equal(route.routingDecision, "route-to-content");
+});
+
+test("route-failure routes deck metadata drift to deck-content-producer", () => {
+  const deckRoot = makeDeckRoot();
+  writeJson(deckRoot, ".deck-quality/validation-result.json", {
+    schemaVersion: 1,
+    status: "fail",
+    results: [
+      { ok: false, name: "deck slides metadata", detail: "slide-01:metadata-evidence-drift" }
+    ]
+  });
+
+  const result = runRoute(deckRoot);
+
+  assert.equal(result.status, 2);
+  const route = parseOutput(result);
+  assert.equal(route.recommendedAgent, "deck-content-producer");
+  assert.equal(route.phase, "slide output");
+  assert.equal(route.routingDecision, "route-to-content");
+});
+
 test("route-failure routes visual remediation output issues to output regenerator", () => {
   const deckRoot = makeDeckRoot();
   writeJson(deckRoot, ".deck-quality/quality-remediation-plan.json", {

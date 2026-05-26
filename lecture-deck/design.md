@@ -107,7 +107,7 @@ Use these local CSS tokens:
 - Use hand-drawn display type sparingly. If every slide uses it heavily, the deck becomes decorative instead of clear.
 - Keep body text black. Use size, weight, position, and divider structure for hierarchy.
 - Screen text must stay shorter than presenter notes.
-- On content slides, the headline should identify the message but not dominate the visual evidence. If a Korean headline wraps to three or more lines, reduce the type scale or rewrite the line before shrinking supporting visuals.
+- On content slides, the headline should identify the message but not dominate the visual evidence. Korean content-slide headings should render in two lines or fewer at desktop size. If a Korean headline wraps to three or more heavy lines, rewrite it before shrinking supporting visuals.
 
 ## Layout
 
