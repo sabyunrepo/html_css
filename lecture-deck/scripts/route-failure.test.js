@@ -248,6 +248,38 @@ test("route-failure routes failed motion mutation final smoke to validation runn
   assert.equal(parseOutput(result).recommendedAgent, "deck-validation-runner");
 });
 
+test("route-failure routes final smoke output failures to output regenerator", () => {
+  const deckRoot = makeDeckRoot();
+  writeJson(deckRoot, ".deck-quality/regression-gate-report.json", {
+    schemaVersion: 1,
+    status: "fail",
+    steps: [
+      {
+        id: "motion-mutation-loop",
+        status: "fail",
+        expectedReport: ".deck-quality/motion-mutation-report.json",
+        stdoutExcerpt: "PASS motion mutation report - .deck-quality/motion-mutation-report.json",
+        stderrExcerpt: "FAIL motion mutation score - 7/7 killed (100%)\nFAIL final deck-loop smoke"
+      }
+    ]
+  });
+  writeJson(deckRoot, ".deck-quality/quality-remediation-plan.json", {
+    status: "fail",
+    workflowIssues: [],
+    outputIssues: [
+      { slide: "slide-06", problem: "compact visual labels wrap into broken fragments", failureCategory: "quality" }
+    ]
+  });
+
+  const result = runRoute(deckRoot);
+
+  assert.equal(result.status, 2);
+  const route = parseOutput(result);
+  assert.equal(route.recommendedAgent, "deck-output-regenerator");
+  assert.equal(route.routingDecision, "route-to-output-regeneration");
+  assert.match(route.reason, /final deck-loop smoke failed/);
+});
+
 test("route-failure routes failed regression route-policy step to workflow improver", () => {
   const deckRoot = makeDeckRoot();
   writeJson(deckRoot, ".deck-quality/regression-gate-report.json", {

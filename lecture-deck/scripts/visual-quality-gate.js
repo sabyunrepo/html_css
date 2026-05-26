@@ -15,6 +15,12 @@ const rubricPath = path.join(outputDir, "visual-rubric-scores.json");
 const screenshotReviewPath = path.join(outputDir, "screenshot-review.json");
 const { appendTrace } = require("./workflow-trace");
 const VISUAL_SCORE_PASS = 82;
+const SCREENSHOT_TIMING = {
+  initialDelayMs: 80,
+  minimumSettledDelayMs: 900,
+  settledBufferMs: 240,
+  maximumSettledDelayMs: 3600
+};
 const visualFormRequirements = {
   funnel: [".funnel-source", ".funnel-neck", ".funnel-result"],
   "document-template": [".sheet-header", ".sheet-row"],
@@ -224,6 +230,55 @@ async function capturePng(client, outputPath) {
   fs.writeFileSync(outputPath, Buffer.from(screenshot.data, "base64"));
 }
 
+function animationSettleMs(animation) {
+  const delay = Math.max(0, Number(animation.delay || 0));
+  const endDelay = Math.max(0, Number(animation.endDelay || 0));
+  const duration = Math.max(0, Number(animation.duration || 0));
+  const iterations = animation.iterations === "Infinity" ? Infinity : Math.max(0, Number(animation.iterations || 1));
+  if (!Number.isFinite(iterations)) {
+    return Infinity;
+  }
+  return delay + (duration * iterations) + endDelay;
+}
+
+function chooseSettledScreenshotDelay(animationDetails, options = {}) {
+  const timing = { ...SCREENSHOT_TIMING, ...options };
+  const maxSettleMs = (animationDetails || []).reduce((max, animation) => {
+    const settleMs = animationSettleMs(animation);
+    if (!Number.isFinite(settleMs)) {
+      return timing.maximumSettledDelayMs;
+    }
+    return Math.max(max, settleMs);
+  }, 0);
+  const requestedDelay = Math.ceil(Math.max(
+    timing.minimumSettledDelayMs,
+    maxSettleMs + timing.settledBufferMs
+  ));
+  return Math.min(requestedDelay, timing.maximumSettledDelayMs);
+}
+
+async function collectAnimationDetails(client) {
+  return evaluate(client, `
+    (() => {
+      const active = document.querySelector(".deck-frame.is-active .slide");
+      return active ? active.getAnimations({ subtree: true }).map((animation) => {
+        const timing = animation.effect?.getTiming?.() || {};
+        const target = animation.effect?.target;
+        return {
+          delay: Number(timing.delay || 0),
+          endDelay: Number(timing.endDelay || 0),
+          duration: Number(timing.duration || 0),
+          iterations: timing.iterations === Infinity ? "Infinity" : Number(timing.iterations || 0),
+          fill: timing.fill || "",
+          easing: timing.easing || "",
+          playState: animation.playState || "",
+          targetClass: typeof target?.className === "string" ? target.className : ""
+        };
+      }) : [];
+    })()
+  `);
+}
+
 function formatIssue(issue) {
   return `- ${issue.slide || "deck"}: ${issue.problem} -> ${issue.feedback}`;
 }
@@ -251,7 +306,7 @@ function buildReport({ spec, screenshots, issues, motionObservations = [], visua
     "## Motion Quality",
     "",
     ...(motionObservations.length
-      ? motionObservations.map((item) => `- ${item.slide}: animations=${item.animations}, targets=${item.animatedTargets}, staggeredDelays=${item.staggeredDelays}, maxDurationMs=${item.maxDurationMs}`)
+      ? motionObservations.map((item) => `- ${item.slide}: animations=${item.animations}, targets=${item.animatedTargets}, staggeredDelays=${item.staggeredDelays}, maxDelayMs=${item.maxDelayMs}, maxDurationMs=${item.maxDurationMs}, maxSettleMs=${item.maxSettleMs}, screenshotDelayMs=${item.screenshotDelayMs}`)
       : ["- No declared motion slides detected."]),
     "",
     "## Visual Rubric Scores",
@@ -280,25 +335,34 @@ function buildReport({ spec, screenshots, issues, motionObservations = [], visua
   return lines.join("\n");
 }
 
+function isWorkflowRemediationIssue(issue = {}) {
+  const problem = `${issue.problem || ""} ${issue.failureCategory || ""} ${issue.routingDecision || ""}`;
+  return /false.?pass|harness|gate|workflow|contract|missing screenshot review|early motion capture|missing settled timing|fixed timestamp/i.test(problem);
+}
+
 function buildRemediationPlan({ spec, screenshots, issues, motionObservations = [], visualScores = [] }) {
   const relativeScreenshots = screenshots.map((file) => path.relative(root, file));
-  const outputIssues = issues.map((issue) => ({
-    ...issue,
-    failureCategory: classifyIssue(issue.problem),
-    owner: "deck-output-regenerator"
-  }));
-  const workflowIssues = issues.map((issue) => ({
-    slide: issue.slide || "deck",
-    failureCategory: classifyIssue(issue.problem),
-    owner: "deck-workflow-improver",
-    recommendedRule: issue.feedback,
-    targetFiles: [
-      "lecture-deck/design.md",
-      "lecture-deck/few-shots.md",
-      ".codex/skills/deck-screenshot-quality/SKILL.md",
-      "lecture-deck/scripts/visual-quality-gate.js"
-    ]
-  }));
+  const outputIssues = issues
+    .filter((issue) => !isWorkflowRemediationIssue(issue))
+    .map((issue) => ({
+      ...issue,
+      failureCategory: classifyIssue(issue.problem),
+      owner: "deck-output-regenerator"
+    }));
+  const workflowIssues = issues
+    .filter(isWorkflowRemediationIssue)
+    .map((issue) => ({
+      slide: issue.slide || "deck",
+      failureCategory: classifyIssue(issue.problem),
+      owner: "deck-workflow-improver",
+      recommendedRule: issue.feedback,
+      targetFiles: [
+        "lecture-deck/design.md",
+        "lecture-deck/few-shots.md",
+        ".codex/skills/deck-screenshot-quality/SKILL.md",
+        "lecture-deck/scripts/visual-quality-gate.js"
+      ]
+    }));
   const workflowPrompt = [
     "You are deck-workflow-improver.",
     "Read `.codex/agents/deck-workflow-improver.toml` and `.codex/skills/deck-screenshot-quality/SKILL.md`.",
@@ -331,7 +395,9 @@ function buildRemediationPlan({ spec, screenshots, issues, motionObservations = 
     outputIssues,
     workflowFirst: workflowIssues.length > 0,
     requiredOrder: workflowIssues.length > 0
-      ? ["deck-workflow-improver", "deck-output-regenerator"]
+      ? outputIssues.length > 0
+        ? ["deck-workflow-improver", "deck-output-regenerator"]
+        : ["deck-workflow-improver"]
       : outputIssues.length > 0
         ? ["deck-output-regenerator"]
         : [],
@@ -428,6 +494,11 @@ function scoreVisual(slideReport) {
       visualLabelCount: slideReport.visualLabelCount
     });
   }
+  if (slideReport.compactLabelWrapFailures && slideReport.compactLabelWrapFailures.length > 0) {
+    deduct(18, "compact visual labels wrap into broken fragments", {
+      failures: slideReport.compactLabelWrapFailures
+    });
+  }
   if (slideReport.darkFillFailures && slideReport.darkFillFailures.length > 0) {
     deduct(18, "large near-black filled surface is off-tone", {
       failures: slideReport.darkFillFailures
@@ -486,13 +557,15 @@ async function runQualityGate() {
     for (let index = 0; index < spec.slides.length; index += 1) {
       const slide = spec.slides[index];
       await evaluate(client, `window.DECK_API.goTo(${index})`);
-      await new Promise((resolve) => setTimeout(resolve, 80));
+      await new Promise((resolve) => setTimeout(resolve, SCREENSHOT_TIMING.initialDelayMs));
       const earlyPath = path.join(screenshotDir, `${String(index + 1).padStart(2, "0")}-${slide.id}-desktop-000ms.png`);
       await capturePng(client, earlyPath);
       screenshots.push(earlyPath);
 
-      await new Promise((resolve) => setTimeout(resolve, 820));
-      const latePath = path.join(screenshotDir, `${String(index + 1).padStart(2, "0")}-${slide.id}-desktop-900ms.png`);
+      const preSettleAnimationDetails = await collectAnimationDetails(client);
+      const settledDelayMs = chooseSettledScreenshotDelay(preSettleAnimationDetails);
+      await new Promise((resolve) => setTimeout(resolve, Math.max(0, settledDelayMs - SCREENSHOT_TIMING.initialDelayMs)));
+      const latePath = path.join(screenshotDir, `${String(index + 1).padStart(2, "0")}-${slide.id}-desktop-settled-${settledDelayMs}ms.png`);
       await capturePng(client, latePath);
       screenshots.push(latePath);
 
@@ -515,6 +588,7 @@ async function runQualityGate() {
             const target = animation.effect?.target;
             return {
               delay: Number(timing.delay || 0),
+              endDelay: Number(timing.endDelay || 0),
               duration: Number(timing.duration || 0),
               iterations: timing.iterations === Infinity ? "Infinity" : Number(timing.iterations || 0),
               fill: timing.fill || "",
@@ -638,6 +712,38 @@ async function runQualityGate() {
                 width: Math.round(rect.width),
                 lineCount,
                 averageCharactersPerLine: Math.round(averageCharactersPerLine * 10) / 10
+              };
+            }
+            return null;
+          }).filter(Boolean).slice(0, 5);
+          const compactLabelWrapFailures = textElements.map((element) => {
+            const text = directText(element);
+            const compactText = text.replace(/\\s+/g, "");
+            if (
+              compactText.length < 5
+              || compactText.length > 14
+              || /\\s/.test(text)
+              || /[가-힣]/.test(text)
+            ) {
+              return null;
+            }
+            const rect = element.getBoundingClientRect();
+            if (rect.width >= 88) {
+              return null;
+            }
+            const range = document.createRange();
+            range.selectNodeContents(element);
+            const lineCount = Math.max(1, new Set(Array.from(range.getClientRects())
+              .filter((line) => line.width > 0 && line.height > 0)
+              .map((line) => Math.round(line.top))).size);
+            range.detach();
+            if (lineCount >= 2) {
+              return {
+                selector: textLabel(element, text),
+                text,
+                width: Math.round(rect.width),
+                lineCount,
+                averageCharactersPerLine: Math.round((compactText.length / lineCount) * 10) / 10
               };
             }
             return null;
@@ -899,6 +1005,7 @@ async function runQualityGate() {
             animationDetails,
             contrastFailures,
             koreanWrapFailures,
+            compactLabelWrapFailures,
             darkFillFailures,
             visualForm: {
               declared: ${JSON.stringify(slide.visualForm || "")},
@@ -922,6 +1029,13 @@ async function runQualityGate() {
       const maxDurationMs = (slideReport.animationDetails || []).reduce((max, item) => {
         return Math.max(max, Number(item.duration || 0));
       }, 0);
+      const maxDelayMs = (slideReport.animationDetails || []).reduce((max, item) => {
+        return Math.max(max, Number(item.delay || 0));
+      }, 0);
+      const maxSettleMs = (slideReport.animationDetails || []).reduce((max, item) => {
+        const settleMs = animationSettleMs(item);
+        return Number.isFinite(settleMs) ? Math.max(max, settleMs) : Infinity;
+      }, 0);
       const infiniteAnimations = (slideReport.animationDetails || []).filter((item) => item.iterations === "Infinity").length;
       const isAnimatedSlide = slide.motionDecision?.mode === "animated" || Boolean(slide.motion);
       const visualScore = scoreVisual(slideReport);
@@ -937,7 +1051,8 @@ async function runQualityGate() {
           lucideIconCount: slideReport.lucideIconCount,
           legacyMarkerCount: slideReport.legacyMarkerCount,
           nonLucideSvgCount: slideReport.nonLucideSvgCount,
-          darkFillFailures: slideReport.darkFillFailures
+          darkFillFailures: slideReport.darkFillFailures,
+          compactLabelWrapFailures: slideReport.compactLabelWrapFailures
         }
       });
 
@@ -947,7 +1062,10 @@ async function runQualityGate() {
           animations: slideReport.animations,
           animatedTargets: animationTargets.size,
           staggeredDelays: staggeredDelays.size,
-          maxDurationMs,
+          maxDelayMs: Number.isFinite(maxDelayMs) ? Math.round(maxDelayMs) : maxDelayMs,
+          maxDurationMs: Number.isFinite(maxDurationMs) ? Math.round(maxDurationMs) : maxDurationMs,
+          maxSettleMs: Number.isFinite(maxSettleMs) ? Math.round(maxSettleMs) : maxSettleMs,
+          screenshotDelayMs: settledDelayMs,
           infiniteAnimations
         });
       }
@@ -971,6 +1089,17 @@ async function runQualityGate() {
             failures: slideReport.koreanWrapFailures
           },
           feedback: "Widen Korean text containers, use word-break: keep-all for prose and labels, and avoid one-character vertical wrapping."
+        });
+      }
+
+      if (slideReport.compactLabelWrapFailures.length > 0) {
+        issues.push({
+          slide: slide.id,
+          problem: "compact visual labels wrap into broken fragments",
+          measuredEvidence: {
+            failures: slideReport.compactLabelWrapFailures
+          },
+          feedback: "Widen compact badges, reduce the label text, or use an icon/short code so labels do not split inside fixed-format visual elements."
         });
       }
 
@@ -1235,8 +1364,10 @@ async function runQualityGate() {
     for (let index = 0; index < spec.slides.length; index += 1) {
       const slide = spec.slides[index];
       await evaluate(client, `window.DECK_API.goTo(${index})`);
-      await new Promise((resolve) => setTimeout(resolve, 160));
-      const mobilePath = path.join(screenshotDir, `${String(index + 1).padStart(2, "0")}-${slide.id}-mobile.png`);
+      const mobileAnimationDetails = await collectAnimationDetails(client);
+      const mobileSettledDelayMs = chooseSettledScreenshotDelay(mobileAnimationDetails);
+      await new Promise((resolve) => setTimeout(resolve, mobileSettledDelayMs));
+      const mobilePath = path.join(screenshotDir, `${String(index + 1).padStart(2, "0")}-${slide.id}-mobile-settled-${mobileSettledDelayMs}ms.png`);
       await capturePng(client, mobilePath);
       screenshots.push(mobilePath);
 
@@ -1335,15 +1466,25 @@ async function runQualityGate() {
   }
 }
 
-runQualityGate().catch((error) => {
-  fs.mkdirSync(outputDir, { recursive: true });
-  fs.writeFileSync(reportPath, `# Visual Quality Report\n\nFAIL: ${error.message}\n`);
-  appendTrace(root, {
-    event: "screenshot_review",
-    status: "fail",
-    source: "visual-quality-gate.js",
-    error: error.message
+if (require.main === module) {
+  runQualityGate().catch((error) => {
+    fs.mkdirSync(outputDir, { recursive: true });
+    fs.writeFileSync(reportPath, `# Visual Quality Report\n\nFAIL: ${error.message}\n`);
+    appendTrace(root, {
+      event: "screenshot_review",
+      status: "fail",
+      source: "visual-quality-gate.js",
+      error: error.message
+    });
+    console.error(`FAIL screenshot quality - ${error.message}`);
+    process.exitCode = 1;
   });
-  console.error(`FAIL screenshot quality - ${error.message}`);
-  process.exitCode = 1;
-});
+}
+
+module.exports = {
+  SCREENSHOT_TIMING,
+  animationSettleMs,
+  chooseSettledScreenshotDelay,
+  buildRemediationPlan,
+  isWorkflowRemediationIssue
+};

@@ -219,7 +219,24 @@ function routeFromImprovementLoop(report) {
   return null;
 }
 
-function routeFromMotionMutation(report) {
+function routeFromFinalSmokePlan(plan, paths, fallbackIssues = []) {
+  const planRoute = routeFromRemediationPlan(plan);
+  if (planRoute && planRoute.status === "route-required") {
+    return {
+      ...planRoute,
+      reason: `final deck-loop smoke failed; ${planRoute.reason}`,
+      evidence: Array.from(new Set([...paths, ...planRoute.evidence]))
+    };
+  }
+  return buildRoute(
+    "validation",
+    "final deck-loop smoke failed",
+    paths,
+    fallbackIssues
+  );
+}
+
+function routeFromMotionMutation(report, plan = null) {
   if (!report) return null;
   const survivedCases = (report.cases || []).filter((item) => item.status === "survived");
   if (survivedCases.length) {
@@ -231,12 +248,7 @@ function routeFromMotionMutation(report) {
     );
   }
   if (report.finalSmoke?.status === "failed") {
-    return buildRoute(
-      "validation",
-      "motion-mutation-loop final deck-loop smoke failed",
-      [".deck-quality/motion-mutation-report.json"],
-      [report.finalSmoke]
-    );
+    return routeFromFinalSmokePlan(plan, [".deck-quality/motion-mutation-report.json"], [report.finalSmoke]);
   }
   if (report.total !== undefined) {
     return noRoute("motion-mutation-loop killed all mutants", [".deck-quality/motion-mutation-report.json"]);
@@ -244,12 +256,15 @@ function routeFromMotionMutation(report) {
   return null;
 }
 
-function routeFromRegressionGate(report) {
+function routeFromRegressionGate(report, plan = null) {
   if (!report) return null;
   const failedSteps = (report.steps || []).filter((step) => step.status === "fail");
   if (failedSteps.length) {
     const first = failedSteps[0];
     const paths = [".deck-quality/regression-gate-report.json", first.expectedReport].filter(Boolean);
+    if (/final deck-loop smoke/i.test(`${first.stderrExcerpt || ""} ${first.stdoutExcerpt || ""}`)) {
+      return routeFromFinalSmokePlan(plan, paths, failedSteps);
+    }
     if (/route-policy|improvement-loop|motion-mutation-loop/i.test(first.id || "")) {
       return buildRoute("workflow", `regression gate failed: ${first.id}`, paths, failedSteps);
     }
@@ -313,9 +328,9 @@ function routeFailure(args = {}) {
 
   const improvementRoute = routeFromImprovementLoop(improvement);
   if (improvementRoute && improvementRoute.status === "route-required") return improvementRoute;
-  const mutationRoute = routeFromMotionMutation(mutation);
+  const mutationRoute = routeFromMotionMutation(mutation, plan);
   if (mutationRoute && mutationRoute.status === "route-required") return mutationRoute;
-  const regressionRoute = routeFromRegressionGate(regression);
+  const regressionRoute = routeFromRegressionGate(regression, plan);
   if (regressionRoute && regressionRoute.status === "route-required") return regressionRoute;
 
   const planRoute = routeFromRemediationPlan(plan);

@@ -41,8 +41,11 @@ A slide passes only when:
 - Large downloaded illustrations are local and source-noted.
 - Motion is restrained, meaningful, finite, token-based, recipe-aligned, and reduced-motion safe.
 - Animated output matches `motionPlan`: targets exist, `mustNotAnimate` selectors remain still, and visual-form-specific sequencing is visible.
+- Settled screenshots are captured after the active slide's CSS animation settle time, not at a fixed early timestamp. Check report or JSON evidence for `maxSettleMs` and `screenshotDelayMs` when motion exists.
+- A screenshot that shows mid-animation opacity, transform, clipped entry, or incomplete staggered layout while labeled settled is a harness failure.
 - Desktop/mobile screenshots have no overflow or overlap.
 - Korean text does not wrap into one-character columns, and pale backgrounds do not use white or low-contrast text.
+- Compact labels inside badges, counters, dots, chips, and fixed-format visual modules do not wrap into broken fragments.
 - Large pure-black or near-black filled surfaces are not acceptable unless the source material requires a literal black object. Black may be used for text, strokes, small labels, and compact badges, but not as the dominant fill for terminal panes, hubs, preview cards, or instructional modules.
 - A passing report with visibly broken screenshots is a harness defect, not an acceptable output.
 - `screenshot-review.json` must exist after `stop-quality` when `visual-quality-report.md` exists. Missing review artifact is a harness failure, not an output polish issue.
@@ -64,8 +67,10 @@ A slide passes only when:
 - Contrast or pale-background readability failure: route to `deck-visual-hierarchy-layout` and current CSS output.
 - Heavy black fill or off-tone dark surface: route to `deck-visual-motion`, `lecture-deck/design.md`, and current CSS output.
 - One-character Korean wrapping: route to `deck-visual-hierarchy-layout`, then repair width, `word-break`, and copy density.
+- Broken compact label wrapping: route to `deck-visual-hierarchy-layout` for sizing rules and current output repair only after the harness reports the failure.
 - Weak image priority: route to `deck-asset-selection` and current layout allocation.
 - Weak or decorative motion: route to `deck-css-motion-generation` and current `motionPlan`.
+- Early motion capture, missing settled timing evidence, or a fixed timestamp that is shorter than CSS animation settle time: route to `deck-workflow-improver` and `lecture-deck/scripts/visual-quality-gate.js`.
 - Visual form mismatch: route to `deck-content-production` spec fields and current HTML/CSS structure.
 
 Do not mark complete until screenshot quality passes.

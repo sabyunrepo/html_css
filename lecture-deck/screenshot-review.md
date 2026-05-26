@@ -17,6 +17,14 @@ Screenshot review is the perceptual quality gate for the deck. It checks the ren
 
 Screenshots are written to `.deck-quality/screenshots/`.
 
+The settled screenshots must be animation-aware. The gate must inspect the active
+slide's rendered CSS animations and wait until the largest finite
+`delay + duration * iterations + endDelay` value has elapsed, plus a small
+stabilization buffer. A fixed timestamp such as 900ms is not enough when
+`motionPlan` uses staggered targets. If a settled screenshot captures visible
+mid-animation opacity or transform state, treat it as a harness failure and
+route it to `deck-workflow-improver`.
+
 ## Pass Bar
 
 A slide passes only when:
@@ -25,6 +33,8 @@ A slide passes only when:
 - Text has readable contrast against its actual rendered background.
 - Large pure-black or near-black filled surfaces are rejected unless the slide evidence requires a literal black object; dark ink is for text, strokes, small labels, and compact badges.
 - Korean text does not collapse into one-character or overly narrow columns.
+- Compact visual labels do not split into broken fragments inside badges,
+  counters, markers, or fixed-format modules.
 - Primary evidence/action from `importanceMap` is large enough to matter.
 - Visuals match `visualForm`; selector presence alone is not enough.
 - Semantic modules do not overlap or clip outside the visual safe area.

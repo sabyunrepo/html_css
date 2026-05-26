@@ -38,6 +38,26 @@ Status values:
 
 ## Completed Items
 
+### HIB-011 Animation-Aware Screenshot Timing Gate
+
+- Status: done
+- Priority: high
+- Problem: `stop-quality` captured settled screenshots at a fixed 900ms desktop timestamp and mobile screenshots after only 160ms, so slides with staggered CSS animation could be reviewed before the final layout state was visible. Once settled screenshots were used, compact badge labels could still visibly fragment while the gate passed. The remediation plan also duplicated every issue into both workflow and output buckets, causing output-only failures to route back to workflow improvement.
+- Desired improvement: Compute screenshot timing from the active slide's rendered CSS animations, record settled timing evidence in visual quality reports, reject compact visual labels that wrap into broken fragments, and split remediation plan routing so harness defects go to workflow improvement while detected output defects go to output regeneration.
+- Harness layer: screenshot quality gate, motion validation, remediation routing, reviewer skill contract
+- Changed files:
+  - `lecture-deck/scripts/visual-quality-gate.js`
+  - `lecture-deck/scripts/visual-quality-gate.test.js`
+  - `lecture-deck/scripts/route-failure.js`
+  - `lecture-deck/scripts/route-failure.test.js`
+  - `lecture-deck/screenshot-review.md`
+  - `.codex/skills/deck-screenshot-quality/SKILL.md`
+  - `lecture-deck/eval-corpus/deck-quality-cases.jsonl`
+- Validation:
+  - `node --test lecture-deck/scripts/visual-quality-gate.test.js lecture-deck/scripts/route-failure.test.js`
+  - `node lecture-deck/scripts/run-hook.js quality-loop` kills all motion mutants and then fails final smoke on the current output defect
+  - `node lecture-deck/scripts/route-failure.js --json` routes the remaining current-output defect to `deck-output-regenerator`
+
 ### HIB-010 Deck Metadata Drift Gate
 
 - Status: done
